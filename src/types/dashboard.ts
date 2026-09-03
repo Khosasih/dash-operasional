@@ -25,9 +25,12 @@ export interface IncidentSummary {
 export interface ServiceDesk {
   firstResponseTime: number // MIN
   avgResolutionTime: number // HRS
+  TargetHrs?: number // Target HRS
+  TargetSLA?: number // Target SLA
   firstCallResolution: number // %
   ticketBacklog: number
 }
+
 
 export interface SecuritySummary {
   criticalSecurityIncidents: number

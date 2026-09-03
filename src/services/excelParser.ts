@@ -219,7 +219,9 @@ export function parseWorksheetToDashboardData(
   let unsolvedTickets = 0
 
   let actualSlaHours = 3.2
+  let targetSlaHours = 4.0
   let slaCompliance = 81.0
+  let targetSlaCompliance = 80.0
 
   let criticalSecIncidents = 0
   let criticalVulnOpen = 0
@@ -278,8 +280,11 @@ export function parseWorksheetToDashboardData(
     if (firstCell.includes('4. SERVICE DESK') || firstCell.includes('tbl_service_desk')) {
       const sdRow = rows[i + 2] || []
       actualSlaHours = parseNum(sdRow[1], actualSlaHours)
+      targetSlaHours = parseNum(sdRow[2], targetSlaHours)
       slaCompliance = parseNum(sdRow[3], slaCompliance)
+      targetSlaCompliance = parseNum(sdRow[4], targetSlaCompliance)
     }
+
 
     // 5. Security Summary
     if (firstCell.includes('5. SECURITY SUMMARY') || firstCell.includes('tbl_security_summary')) {
@@ -500,9 +505,12 @@ export function parseWorksheetToDashboardData(
   const serviceDesk: ServiceDesk = {
     firstResponseTime: 11,
     avgResolutionTime: actualSlaHours,
+    TargetHrs: targetSlaHours,
+    TargetSLA: targetSlaCompliance,
     firstCallResolution: slaCompliance,
     ticketBacklog: 14,
   }
+
 
   const security: SecuritySummary = {
     criticalSecurityIncidents: criticalSecIncidents,

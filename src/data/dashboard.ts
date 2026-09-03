@@ -71,9 +71,12 @@ export const mockDashboardData: Record<string, DashboardData> = {
     serviceDesk: {
       firstResponseTime: 11, // MIN (target < 15)
       avgResolutionTime: 3.2, // HRS (target < 4)
+      TargetHrs: 4,
+      TargetSLA: 80,
       firstCallResolution: 81, // % (target > 80)
       ticketBacklog: 14, // target < 20
     },
+
     security: {
       criticalSecurityIncidents: 4,
       criticalVulnerabilitiesOpen: 10,

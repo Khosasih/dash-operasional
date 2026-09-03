@@ -11,25 +11,26 @@ defineProps<{
   <BaseCard title="Service Desk Performance" subtitle="(This Month)">
     <div class="perf-body">
       <div class="metrics-grid">
-        <!-- Avg Resolution -->
+        <!-- Actual SLA Hours -->
         <div class="perf-cell">
           <span class="cell-val">
             {{ data.avgResolutionTime.toFixed(1) }} <span class="cell-unit">HRS</span>
           </span>
           <span class="cell-lbl">Actual SLA</span>
-          <span class="cell-target">(Target &lt; 48 Hrs)</span>
+          <span class="cell-target">(Target &lt; {{ data.TargetHrs ?? 4 }} Hrs)</span>
         </div>
 
-        <!-- FCR -->
+        <!-- SLA Compliance -->
         <div class="perf-cell">
           <span class="cell-val">{{ data.firstCallResolution }}%</span>
           <span class="cell-lbl">Actual SLA</span>
-          <span class="cell-target">(Target &gt; 80%)</span>
+          <span class="cell-target">(Target &gt; {{ data.TargetSLA ?? 80 }}%)</span>
         </div>
       </div>
     </div>
   </BaseCard>
 </template>
+
 
 <style scoped>
 .perf-body {
