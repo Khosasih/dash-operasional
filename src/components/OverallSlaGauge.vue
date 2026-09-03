@@ -73,15 +73,11 @@ const chartOptions = computed(() => ({
         <span class="check-box">
           <Check class="check-icon" />
         </span>
-        <span class="target-lbl">Target &ge; 95.00%</span>
+        <span class="target-lbl">Target &ge; 99.00%</span>
       </div>
     </div>
   </template>
-  <BaseCard
-    v-else
-    title="Overall Highlight"
-    subtitle="Monthly aggregated service level agreement score"
-  >
+  <BaseCard v-else title="Overall Highlight" subtitle="Monthly aggregated service level agreement score">
     <div class="gauge-container">
       <div class="chart-wrapper">
         <apexchart type="radialBar" height="190" :options="chartOptions" :series="series" />
