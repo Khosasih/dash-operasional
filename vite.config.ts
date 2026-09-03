@@ -4,9 +4,12 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
+import { excelStoragePlugin } from './src/server/excelStoragePlugin'
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools()],
+  plugins: [vue(), vueDevTools(), excelStoragePlugin()],
+
   server: {
     allowedHosts: ['dash-operasional.atmajaya.ac.id'],
   },

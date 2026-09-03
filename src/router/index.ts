@@ -9,7 +9,13 @@ const router = createRouter({
       name: 'dashboard',
       component: DashboardView,
     },
+    {
+      path: '/kelolaFile',
+      name: 'kelola-file',
+      component: () => import('../views/KelolaFileView.vue'),
+    },
   ],
+
 })
 
 export default router
