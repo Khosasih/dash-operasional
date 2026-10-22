@@ -39,18 +39,38 @@ export function getNextPeriod(currentPeriodStr?: string): string {
   const year = parseInt(match[2], 10)
 
   const monthMap: Record<string, number> = {
-    january: 0, jan: 0, januari: 0,
-    february: 1, feb: 1, februari: 1,
-    march: 2, mar: 2, maret: 2,
-    april: 3, apr: 3,
-    may: 4, mei: 4,
-    june: 5, jun: 5, juni: 5,
-    july: 6, jul: 6, juli: 6,
-    august: 7, aug: 7, agustus: 7,
-    september: 8, sep: 8,
-    october: 9, oct: 9, oktober: 9,
-    november: 10, nov: 10,
-    december: 11, dec: 11, desember: 11,
+    january: 0,
+    jan: 0,
+    januari: 0,
+    february: 1,
+    feb: 1,
+    februari: 1,
+    march: 2,
+    mar: 2,
+    maret: 2,
+    april: 3,
+    apr: 3,
+    may: 4,
+    mei: 4,
+    june: 5,
+    jun: 5,
+    juni: 5,
+    july: 6,
+    jul: 6,
+    juli: 6,
+    august: 7,
+    aug: 7,
+    agustus: 7,
+    september: 8,
+    sep: 8,
+    october: 9,
+    oct: 9,
+    oktober: 9,
+    november: 10,
+    nov: 10,
+    december: 11,
+    dec: 11,
+    desember: 11,
   }
 
   const idx = monthMap[rawMonth] ?? -1
@@ -73,18 +93,38 @@ export function sortPeriods(periodList: string[], reverse = false): string[] {
     const rawMonth = match[1].toLowerCase()
     const year = parseInt(match[2], 10)
     const monthMap: Record<string, number> = {
-      january: 0, jan: 0, januari: 0,
-      february: 1, feb: 1, februari: 1,
-      march: 2, mar: 2, maret: 2,
-      april: 3, apr: 3,
-      may: 4, mei: 4,
-      june: 5, jun: 5, juni: 5,
-      july: 6, jul: 6, juli: 6,
-      august: 7, aug: 7, agustus: 7,
-      september: 8, sep: 8,
-      october: 9, oct: 9, oktober: 9,
-      november: 10, nov: 10,
-      december: 11, dec: 11, desember: 11,
+      january: 0,
+      jan: 0,
+      januari: 0,
+      february: 1,
+      feb: 1,
+      februari: 1,
+      march: 2,
+      mar: 2,
+      maret: 2,
+      april: 3,
+      apr: 3,
+      may: 4,
+      mei: 4,
+      june: 5,
+      jun: 5,
+      juni: 5,
+      july: 6,
+      jul: 6,
+      juli: 6,
+      august: 7,
+      aug: 7,
+      agustus: 7,
+      september: 8,
+      sep: 8,
+      october: 9,
+      oct: 9,
+      oktober: 9,
+      november: 10,
+      nov: 10,
+      december: 11,
+      dec: 11,
+      desember: 11,
     }
     const m = monthMap[rawMonth] ?? 0
     return year * 12 + m
@@ -169,7 +209,6 @@ export function normalizePeriodName(sheetName: string): string {
   return `Juli ${year}`
 }
 
-
 function parseNum(val: unknown, fallback = 0): number {
   if (typeof val === 'number') return isNaN(val) ? fallback : val
   if (typeof val === 'string') {
@@ -207,7 +246,7 @@ export function parseWorksheetToDashboardData(
   // Default values
   let overallSla = 98.24
   let targetSla = 95.0
-  let networkSla = 99.75
+  // let networkSla = 99.75
   let serverSla = 97.34
   let appSla = 98.88
   let secSla = 96.99
@@ -227,7 +266,7 @@ export function parseWorksheetToDashboardData(
   let criticalVulnOpen = 0
   let patchCompliance = 95.0
 
-  let netHealthy = 99.0
+  const netHealthy = 0
   let serverHealthy = 98.0
   let vmHealthy = 98.0
   let storageHealthy = 97.0
@@ -246,7 +285,7 @@ export function parseWorksheetToDashboardData(
       const dataRow = rows[i + 2] || []
       overallSla = parseNum(dataRow[1], overallSla)
       targetSla = parseNum(dataRow[2], targetSla)
-      networkSla = parseNum(dataRow[3], networkSla)
+      // networkSla tidak lagi diambil dari excel karena sudah dinamis dari database (API)
       serverSla = parseNum(dataRow[4], serverSla)
       appSla = parseNum(dataRow[5], appSla)
       secSla = parseNum(dataRow[6], secSla)
@@ -285,7 +324,6 @@ export function parseWorksheetToDashboardData(
       targetSlaCompliance = parseNum(sdRow[4], targetSlaCompliance)
     }
 
-
     // 5. Security Summary
     if (firstCell.includes('5. SECURITY SUMMARY') || firstCell.includes('tbl_security_summary')) {
       const secRow = rows[i + 2] || []
@@ -295,9 +333,13 @@ export function parseWorksheetToDashboardData(
     }
 
     // 6. Infrastructure Health
-    if (firstCell.includes('6. INFRASTRUCTURE HEALTH') || firstCell.includes('tbl_infrastructure_health')) {
+    if (
+      firstCell.includes('6. INFRASTRUCTURE HEALTH') ||
+      firstCell.includes('tbl_infrastructure_health')
+    ) {
       const ihRow = rows[i + 2] || []
-      netHealthy = parseNum(ihRow[1], netHealthy)
+      // netHealthy tidak diambil dari excel karena sudah dinamis dari API
+      // netHealthy = parseNum(ihRow[1], netHealthy)
       serverHealthy = parseNum(ihRow[2], serverHealthy)
       vmHealthy = parseNum(ihRow[3], vmHealthy)
       storageHealthy = parseNum(ihRow[4], storageHealthy)
@@ -305,25 +347,56 @@ export function parseWorksheetToDashboardData(
     }
 
     // 7. Infrastructure Utilization
-    if (firstCell.includes('7. INFRASTRUCTURE UTILIZATION') || firstCell.includes('tbl_infrastructure_utilization')) {
+    if (
+      firstCell.includes('7. INFRASTRUCTURE UTILIZATION') ||
+      firstCell.includes('tbl_infrastructure_utilization')
+    ) {
+      const headerRow = (rows[i + 1] || []).map((h) => parseStr(h).toLowerCase())
+
+      const findCol = (keywords: string[]) =>
+        headerRow.findIndex((h) => keywords.every((kw) => h.includes(kw)))
+
+      const locIdx = findCol(['loc']) !== -1 ? findCol(['loc']) : (findCol(['lokasi']) !== -1 ? findCol(['lokasi']) : 0)
+      const memAvgIdx = findCol(['mem', 'avg'])
+      const memPeakIdx = findCol(['mem', 'peak'])
+      const storageIdx = findCol(['stor']) !== -1 ? findCol(['stor']) : findCol(['disk'])
+      const wanYtdIdx = findCol(['wan', 'ytd'])
+      const wanAvgIdx = findCol(['wan', 'avg'])
+      const wanPeakIdx = findCol(['wan', 'peak'])
+
+      const hasCpuInHeader = findCol(['cpu']) !== -1
+
       for (let j = i + 2; j < rows.length; j++) {
         const uRow = rows[j] || []
-        const loc = parseStr(uRow[0])
+        const loc = parseStr(uRow[locIdx])
         if (!loc || loc.includes('8.') || loc.startsWith('tbl_')) break
 
-        const cpuAvg = parseNum(uRow[1])
-        const cpuPeak = parseNum(uRow[2])
-        const memAvg = parseNum(uRow[3])
-        const memPeak = parseNum(uRow[4])
-        const storageUsed = parseNum(uRow[5])
-        const wanYtd = parseNum(uRow[6])
-        const wanAvg = parseNum(uRow[7])
-        const wanPeak = parseNum(uRow[8])
-        const rawStatus = parseStr(uRow[9], 'Good')
+        // cpuAvg dan cpuPeak tidak lagi diambil dari excel karena sudah dinamis dari API
+        const cpuAvg = 0
+        const cpuPeak = 0
+
+        const memAvg = parseNum(
+          memAvgIdx !== -1 ? uRow[memAvgIdx] : (hasCpuInHeader ? uRow[3] : uRow[1])
+        )
+        const memPeak = parseNum(
+          memPeakIdx !== -1 ? uRow[memPeakIdx] : (hasCpuInHeader ? uRow[4] : uRow[2])
+        )
+        const storageUsed = parseNum(
+          storageIdx !== -1 ? uRow[storageIdx] : (hasCpuInHeader ? uRow[5] : uRow[3])
+        )
+        const wanYtd = parseNum(
+          wanYtdIdx !== -1 ? uRow[wanYtdIdx] : (hasCpuInHeader ? uRow[6] : uRow[4])
+        )
+        const wanAvg = parseNum(
+          wanAvgIdx !== -1 ? uRow[wanAvgIdx] : (hasCpuInHeader ? uRow[7] : uRow[5])
+        )
+        const wanPeak = parseNum(
+          wanPeakIdx !== -1 ? uRow[wanPeakIdx] : (hasCpuInHeader ? uRow[8] : uRow[6])
+        )
         const status: 'Good' | 'Warning' | 'Critical' =
-          rawStatus.toLowerCase() === 'critical'
+          wanPeak >= 85
             ? 'Critical'
-            : rawStatus.toLowerCase() === 'warning'
+            : wanPeak >= 70
               ? 'Warning'
               : 'Good'
 
@@ -338,13 +411,7 @@ export function parseWorksheetToDashboardData(
           wanAvg,
           wanPeak,
           status,
-          cpuSparkline: [
-            Math.max(1, cpuAvg * 0.8),
-            Math.max(1, cpuAvg * 0.9),
-            cpuAvg,
-            Math.max(1, cpuAvg * 0.95),
-            cpuPeak > 0 ? cpuPeak : cpuAvg * 1.2,
-          ],
+          cpuSparkline: [0, 0, 0, 0, 0],
           memSparkline: [
             Math.max(1, memAvg * 0.85),
             Math.max(1, memAvg * 0.92),
@@ -402,17 +469,11 @@ export function parseWorksheetToDashboardData(
   const services: ServiceKpi[] = [
     {
       name: 'Network',
-      sla: networkSla,
+      sla: 0,
       target: targetSla,
-      status: getKpiStatus(networkSla, targetSla),
+      status: 'warning',
       color: 'blue',
-      sparklineData: [
-        Number((networkSla - 0.05).toFixed(2)),
-        Number((networkSla + 0.02).toFixed(2)),
-        Number((networkSla - 0.04).toFixed(2)),
-        Number((networkSla + 0.03).toFixed(2)),
-        networkSla,
-      ],
+      sparklineData: [0, 0, 0, 0, 0],
     },
     {
       name: 'Server',
@@ -462,7 +523,10 @@ export function parseWorksheetToDashboardData(
     highlights.length > 0
       ? highlights
       : [
-          { id: '1', text: `Overall SLA ${overallSla}% – ${overallSla >= targetSla ? 'Above Target' : 'Below Target'}` },
+          {
+            id: '1',
+            text: `Overall SLA ${overallSla}% – ${overallSla >= targetSla ? 'Above Target' : 'Below Target'}`,
+          },
           { id: '2', text: `${solvedTickets} Tickets Solved within SLA` },
           { id: '3', text: `${criticalSecIncidents} Security Incidents Handled` },
         ]
@@ -511,7 +575,6 @@ export function parseWorksheetToDashboardData(
     ticketBacklog: 14,
   }
 
-
   const security: SecuritySummary = {
     criticalSecurityIncidents: criticalSecIncidents,
     criticalVulnerabilitiesOpen: criticalVulnOpen,
@@ -532,7 +595,7 @@ export function parseWorksheetToDashboardData(
       : [
           {
             location: 'Semanggi',
-            cpuAvg: 9.63,
+            cpuAvg: 0,
             cpuPeak: 0,
             memAvg: 40.22,
             memPeak: 0,
@@ -541,7 +604,7 @@ export function parseWorksheetToDashboardData(
             wanPeak: 106.82,
             wanYtd: 87.17,
             status: 'Critical' as const,
-            cpuSparkline: [40, 45, 55, 48, 76],
+            cpuSparkline: [0, 0, 0, 0, 0],
             memSparkline: [60, 62, 65, 63, 82],
             wanSparkline: [30, 35, 40, 39, 81],
           },
@@ -580,7 +643,8 @@ export async function parseExcelWorkbook(
     const sheet = workbook.Sheets[sheetName]
     if (!sheet) continue
 
-    const sheetOverride = workbook.SheetNames.length === 1 || i === 0 ? overridePeriodName : undefined
+    const sheetOverride =
+      workbook.SheetNames.length === 1 || i === 0 ? overridePeriodName : undefined
     const parsedData = parseWorksheetToDashboardData(sheet, sheetName, sheetOverride)
     if (parsedData) {
       const periodKey = parsedData.reportingPeriod

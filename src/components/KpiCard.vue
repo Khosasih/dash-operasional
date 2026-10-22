@@ -139,14 +139,17 @@ const targetAchieved = computed(() => props.sla >= props.target)
   background-color: var(--color-blue-bg);
   color: var(--color-blue);
 }
+
 .icon-frame.purple {
   background-color: var(--color-purple-bg);
   color: var(--color-purple);
 }
+
 .icon-frame.orange {
   background-color: var(--color-warning-bg);
   color: var(--color-warning);
 }
+
 .icon-frame.teal {
   background-color: var(--color-teal-bg);
   color: var(--color-teal);
@@ -171,11 +174,13 @@ const targetAchieved = computed(() => props.sla >= props.target)
   color: var(--color-good);
   border-color: rgba(34, 164, 71, 0.2);
 }
+
 .status-pill.warning {
   background-color: var(--color-warning-bg);
   color: var(--color-warning);
   border-color: rgba(245, 158, 11, 0.2);
 }
+
 .status-pill.critical {
   background-color: var(--color-critical-bg);
   color: var(--color-critical);

@@ -12,6 +12,16 @@ export default defineConfig({
 
   server: {
     allowedHosts: ['dash-operasional.atmajaya.ac.id'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/cpu': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     alias: {
