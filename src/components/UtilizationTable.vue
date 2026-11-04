@@ -9,10 +9,13 @@ defineProps<{
   data: UtilizationMetric[]
 }>()
 
-// Helper to determine progress bar color
+// Helper to determine progress bar and value color
+// 0 - 59%: green ('good')
+// 60 - 79%: yellow ('warning')
+// 80 - 100%: red ('critical')
 const getStorageColorClass = (val: number) => {
-  if (val >= 90) return 'critical'
-  if (val >= 75) return 'warning'
+  if (val >= 80) return 'critical'
+  if (val >= 60) return 'warning'
   return 'good'
 }
 
@@ -35,6 +38,13 @@ const getLocationIcon = (location: string) => {
   if (location.toLowerCase().includes('pluit')) return Server
   return Building2
 }
+
+const formatVal = (val: number | string | null | undefined): string => {
+  if (val == null || val === '') return '0.00'
+  const num = Number(val)
+  if (isNaN(num)) return '0.00'
+  return num.toFixed(2)
+}
 </script>
 
 <template>
@@ -56,9 +66,9 @@ const getLocationIcon = (location: string) => {
           <template #body="{ data }">
             <div class="spark-cell">
               <div class="metric-vals">
-                <span class="avg">{{ data.cpuAvg }}%</span>
+                <span class="avg">{{ formatVal(data.cpuAvg) }}%</span>
                 <span class="slash">/</span>
-                <span class="peak">{{ data.cpuPeak }}%</span>
+                <span class="peak">{{ formatVal(data.cpuPeak) }}%</span>
               </div>
               <div class="sparkline-wrapper">
                 <apexchart
@@ -78,9 +88,9 @@ const getLocationIcon = (location: string) => {
           <template #body="{ data }">
             <div class="spark-cell">
               <div class="metric-vals">
-                <span class="avg">{{ data.memAvg }}%</span>
+                <span class="avg">{{ formatVal(data.memAvg) }}%</span>
                 <span class="slash">/</span>
-                <span class="peak">{{ data.memPeak }}%</span>
+                <span class="peak">{{ formatVal(data.memPeak) }}%</span>
               </div>
               <div class="sparkline-wrapper">
                 <apexchart
@@ -100,7 +110,7 @@ const getLocationIcon = (location: string) => {
           <template #body="{ data }">
             <div class="storage-cell">
               <div class="pct-row">
-                <span class="pct-val">{{ data.storageUsed }}%</span>
+                <span class="pct-val" :class="getStorageColorClass(data.storageUsed)">{{ formatVal(data.storageUsed) }}%</span>
               </div>
               <div class="bar-track">
                 <div
@@ -117,7 +127,7 @@ const getLocationIcon = (location: string) => {
         <Column header="WAN YTD">
           <template #body="{ data }">
             <div class="ytd-cell">
-              <span class="ytd-val">{{ data.wanYtd }}%</span>
+              <span class="ytd-val">{{ formatVal(data.wanYtd) }}%</span>
             </div>
           </template>
         </Column>
@@ -127,9 +137,9 @@ const getLocationIcon = (location: string) => {
           <template #body="{ data }">
             <div class="spark-cell">
               <div class="metric-vals">
-                <span class="avg">{{ data.wanAvg }}%</span>
+                <span class="avg">{{ formatVal(data.wanAvg) }}%</span>
                 <span class="slash">/</span>
-                <span class="peak">{{ data.wanPeak }}%</span>
+                <span class="peak">{{ formatVal(data.wanPeak) }}%</span>
               </div>
               <div class="sparkline-wrapper">
                 <apexchart
@@ -239,7 +249,20 @@ const getLocationIcon = (location: string) => {
 
 .pct-val {
   font-size: 12px;
+  font-weight: 700;
   color: var(--text-primary);
+}
+
+.pct-val.good {
+  color: var(--color-good);
+}
+
+.pct-val.warning {
+  color: var(--color-warning);
+}
+
+.pct-val.critical {
+  color: var(--color-critical);
 }
 
 .bar-track {

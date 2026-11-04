@@ -1,17 +1,65 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import BaseCard from './BaseCard.vue'
-import type { InfraHealthMetric } from '../types/dashboard'
+import type { InfraHealthMetric, UtilizationMetric } from '../types/dashboard'
 
-defineProps<{
+const props = defineProps<{
   data: InfraHealthMetric[]
+  utilization?: UtilizationMetric[]
 }>()
 
+// Filter metric Virtual Machines agar tidak ditampilkan sementara waktu
+// Dan hitung Storage Healthy dari rata-rata Storage Used (Semanggi + BSD + Pluit) / 3
+const filteredData = computed(() => {
+  const list = (props.data || []).filter(
+    (metric) => metric.name.toLowerCase() !== 'virtual machines',
+  )
+
+  if (props.utilization && props.utilization.length > 0) {
+    const semanggi =
+      props.utilization.find((u) => u.location.toLowerCase().includes('semanggi'))?.storageUsed ?? 0
+    const bsd =
+      props.utilization.find((u) => u.location.toLowerCase().includes('bsd'))?.storageUsed ?? 0
+    const pluit =
+      props.utilization.find((u) => u.location.toLowerCase().includes('pluit'))?.storageUsed ?? 0
+
+    const avgStorageUsed = (semanggi + bsd + pluit) / 3
+    const storageHealthy = Number((100 - avgStorageUsed).toFixed(2))
+
+    return list.map((metric) => {
+      if (metric.name.toLowerCase().includes('storage')) {
+        return {
+          ...metric,
+          name: 'Free Storage',
+          value: storageHealthy,
+        }
+      }
+      return metric
+    })
+  }
+
+  return list
+})
+
 // Dynamic ApexCharts options for mini gauges
-const getChartOptions = (metricVal: number) => {
+const getChartOptions = (metricVal: number, metricName: string = '') => {
   let fillColor = '#0F8B8D' // Teal primary for infra
-  if (metricVal === 100) fillColor = '#22A447'
-  else if (metricVal < 50) fillColor = '#FF1F2D'
-  else if (metricVal < 98) fillColor = '#F59E0B'
+
+  const isStorage = metricName.toLowerCase().includes('storage')
+  if (isStorage) {
+    // Khusus Free Storage:
+    // 0 - 59%  : green
+    // 60 - 79% : yellow
+    // 80 - 100%: red
+    if (metricVal >= 80) fillColor = '#FF1F2D' // Red
+    else if (metricVal >= 60) fillColor = '#F59E0B' // Yellow
+    else fillColor = '#22A447' // Green
+  } else {
+    // Metrik lainnya (Network Devices, Servers, Backup)
+    if (metricVal === 100) fillColor = '#22A447'
+    else if (metricVal < 50) fillColor = '#FF1F2D'
+    else if (metricVal < 98) fillColor = '#F59E0B'
+  }
 
   return {
     chart: {
@@ -23,7 +71,7 @@ const getChartOptions = (metricVal: number) => {
     plotOptions: {
       radialBar: {
         hollow: {
-          size: '56%',
+          size: '54%',
         },
         track: {
           background: 'rgba(15, 139, 141, 0.08)',
@@ -36,7 +84,7 @@ const getChartOptions = (metricVal: number) => {
             fontSize: '11px',
             fontWeight: 800,
             color: '#14213D',
-            formatter: (val: number) => `${val}%`,
+            formatter: (val: number) => `${Number(val).toFixed(2)}%`,
           },
         },
       },
@@ -69,17 +117,12 @@ const getChartOptions = (metricVal: number) => {
       <div class="gauges-container">
         <!-- 5 columns grid -->
         <div class="gauges-flex">
-          <div v-for="metric in data" :key="metric.name" class="gauge-item">
+          <div v-for="metric in filteredData" :key="metric.name" class="gauge-item">
             <span class="metric-name">{{ metric.name }}</span>
 
             <div class="chart-wrapper">
-              <apexchart
-                type="radialBar"
-                height="70"
-                width="70"
-                :options="getChartOptions(metric.value)"
-                :series="[metric.value]"
-              />
+              <apexchart type="radialBar" height="70" width="70" :options="getChartOptions(metric.value, metric.name)"
+                :series="[metric.value]" />
             </div>
 
             <span class="metric-name"> Healthy</span>
@@ -109,7 +152,7 @@ const getChartOptions = (metricVal: number) => {
 
 .gauges-flex {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 2px;
   align-items: center;
   justify-items: center;

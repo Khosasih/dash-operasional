@@ -265,7 +265,7 @@ const resetToSystemDefault = async () => {
             </div>
             <div class="stat-info">
               <span class="stat-label">Periode Aktif Saat Ini</span>
-              <span class="stat-number active-name">{{ store.selectedPeriod }}</span>
+              <span class="stat-number active-name">{{ latestPeriod }}</span>
             </div>
           </div>
 

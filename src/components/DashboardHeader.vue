@@ -13,6 +13,7 @@ import {
   Sparkles,
   RotateCcw,
   Undo2,
+  Loader2,
 } from 'lucide-vue-next'
 
 import { useDashboardStore } from '../stores/dashboard'
@@ -45,6 +46,14 @@ const suggestedNextPeriod = computed(() => {
 // Trigger reload of data
 const reloadDashboard = async () => {
   await store.loadDashboardData()
+}
+
+// Handle change reporting period
+const handlePeriodChange = async (event: { value?: string } | any) => {
+  const newPeriod = event?.value || store.selectedPeriod
+  if (newPeriod) {
+    await store.selectPeriod(newPeriod)
+  }
 }
 
 // Trigger undo of last import / update
@@ -200,18 +209,24 @@ const confirmImport = async () => {
         />
 
         <!-- Box 1: Reporting Period -->
-        <div class="header-control-box">
+        <div class="header-control-box" :class="{ 'is-loading': store.loading }">
           <div class="box-icon-container">
-            <Calendar class="box-icon" />
+            <Loader2 v-if="store.loading" class="box-icon spinning" />
+            <Calendar v-else class="box-icon" />
           </div>
           <div class="box-content">
-            <span class="box-label">Reporting Period</span>
+            <div class="box-label-row">
+              <span class="box-label">Reporting Period</span>
+              <span v-if="store.loading" class="period-loading-tag">Memuat...</span>
+            </div>
             <Select
               v-model="store.selectedPeriod"
               :options="store.periods"
+              :disabled="store.loading"
+              :loading="store.loading"
               placeholder="Select Period"
               class="period-select-custom"
-              @change="store.selectPeriod(store.selectedPeriod)"
+              @change="handlePeriodChange"
             />
           </div>
         </div>
@@ -483,6 +498,36 @@ const confirmImport = async () => {
   gap: 10px;
   box-shadow: var(--shadow-sm);
   min-height: 44px;
+  transition: all 0.2s ease;
+}
+
+.header-control-box.is-loading {
+  border-color: #93c5fd;
+  background-color: #f8fafc;
+}
+
+.box-label-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.period-loading-tag {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--color-blue, #2563eb);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  animation: pulseText 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseText {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .box-icon-container {
@@ -548,6 +593,11 @@ const confirmImport = async () => {
   color: var(--text-secondary) !important;
   width: 12px !important;
   height: 12px !important;
+}
+
+:deep(.period-select-custom.p-select.p-disabled) {
+  opacity: 0.75 !important;
+  cursor: wait !important;
 }
 
 :deep(.header-datepicker-custom.p-datepicker) {

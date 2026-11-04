@@ -85,8 +85,8 @@ export const mockDashboardData: Record<string, DashboardData> = {
     infraHealth: [
       { name: 'Network Devices', value: 99.83 },
       { name: 'Servers', value: 97.34 },
-      { name: 'Virtual Machines', value: 97.34 },
-      { name: 'Storage', value: 96.94 },
+      // { name: 'Virtual Machines', value: 97.34 },
+      { name: 'Free Storage', value: 96.94 },
       { name: 'Backup', value: 93.0 },
     ],
     utilization: [
@@ -242,8 +242,8 @@ export const mockDashboardData: Record<string, DashboardData> = {
     infraHealth: [
       { name: 'Network Devices', value: 95 },
       { name: 'Servers', value: 98 },
-      { name: 'Virtual Machines', value: 98 },
-      { name: 'Storage', value: 49 },
+      // { name: 'Virtual Machines', value: 98 },
+      { name: 'Free Storage', value: 49 },
       { name: 'Backup', value: 100 },
     ],
     utilization: [
@@ -383,8 +383,8 @@ export const mockDashboardData: Record<string, DashboardData> = {
     infraHealth: [
       { name: 'Network Devices', value: 99 },
       { name: 'Servers', value: 100 },
-      { name: 'Virtual Machines', value: 99 },
-      { name: 'Storage', value: 100 },
+      // { name: 'Virtual Machines', value: 99 },
+      { name: 'Free Storage', value: 100 },
       { name: 'Backup', value: 100 },
     ],
     utilization: [

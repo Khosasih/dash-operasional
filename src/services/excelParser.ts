@@ -210,11 +210,11 @@ export function normalizePeriodName(sheetName: string): string {
 }
 
 function parseNum(val: unknown, fallback = 0): number {
-  if (typeof val === 'number') return isNaN(val) ? fallback : val
+  if (typeof val === 'number') return isNaN(val) ? fallback : Number(val.toFixed(2))
   if (typeof val === 'string') {
     const cleaned = val.replace(/%/g, '').replace(/,/g, '.').trim()
     const parsed = parseFloat(cleaned)
-    return isNaN(parsed) ? fallback : parsed
+    return isNaN(parsed) ? fallback : Number(parsed.toFixed(2))
   }
   return fallback
 }
@@ -247,9 +247,9 @@ export function parseWorksheetToDashboardData(
   let overallSla = 98.24
   let targetSla = 95.0
   // let networkSla = 99.75
-  let serverSla = 97.34
-  let appSla = 98.88
-  let secSla = 96.99
+  // appSla tidak lagi diambil dari excel karena sudah dinamis dari Webhook (/api/application-sla)
+  const appSla = 0
+  const secSla = 96.99
 
   const highlights: KeyHighlight[] = []
 
@@ -267,8 +267,8 @@ export function parseWorksheetToDashboardData(
   let patchCompliance = 95.0
 
   const netHealthy = 0
-  let serverHealthy = 98.0
-  let vmHealthy = 98.0
+  const serverHealthy = 0 // Dinamis dari Grafana API (/api/server-sla)
+  // const vmHealthy = 98.0 // Dinonaktifkan sementara
   let storageHealthy = 97.0
   let backupHealthy = 95.0
 
@@ -280,15 +280,19 @@ export function parseWorksheetToDashboardData(
     const row = rows[i] || []
     const firstCell = parseStr(row[0])
 
-    // 1. Overall SLA
+    // 1. Overall SLA (Target, Security Services dari Excel; Overall SLA, Network, Server, Application dinamis dari API)
     if (firstCell.includes('1. OVERALL SLA') || firstCell.includes('tbl_overall_sla')) {
+      const headerRow = (rows[i + 1] || []).map((h) => parseStr(h).toLowerCase())
       const dataRow = rows[i + 2] || []
-      overallSla = parseNum(dataRow[1], overallSla)
-      targetSla = parseNum(dataRow[2], targetSla)
-      // networkSla tidak lagi diambil dari excel karena sudah dinamis dari database (API)
-      serverSla = parseNum(dataRow[4], serverSla)
-      appSla = parseNum(dataRow[5], appSla)
-      secSla = parseNum(dataRow[6], secSla)
+      const findCol = (kw: string) => headerRow.findIndex((h) => h.includes(kw))
+      const targetIdx = findCol('target')
+
+      targetSla = parseNum(
+        targetIdx !== -1 ? dataRow[targetIdx] : dataRow[1] !== undefined ? dataRow[1] : dataRow[2],
+        targetSla,
+      )
+      // Overall SLA, Network SLA, Server SLA, Application SLA, dan Security Services SLA
+      // tidak lagi diambil dari Excel — seluruhnya dinamis dari API/webhook
     }
 
     // 2. Key Highlights
@@ -332,106 +336,71 @@ export function parseWorksheetToDashboardData(
       patchCompliance = parseNum(secRow[3], patchCompliance)
     }
 
-    // 6. Infrastructure Health
+    // 6. Infrastructure Health (Network Devices & Servers dari API, Storage Healthy dihitung dari rata-rata Storage Used)
     if (
       firstCell.includes('6. INFRASTRUCTURE HEALTH') ||
       firstCell.includes('tbl_infrastructure_health')
     ) {
+      const headerRow = (rows[i + 1] || []).map((h) => parseStr(h).toLowerCase())
       const ihRow = rows[i + 2] || []
-      // netHealthy tidak diambil dari excel karena sudah dinamis dari API
-      // netHealthy = parseNum(ihRow[1], netHealthy)
-      serverHealthy = parseNum(ihRow[2], serverHealthy)
-      vmHealthy = parseNum(ihRow[3], vmHealthy)
-      storageHealthy = parseNum(ihRow[4], storageHealthy)
-      backupHealthy = parseNum(ihRow[5], backupHealthy)
+      const findCol = (kw: string) => headerRow.findIndex((h) => h.includes(kw))
+      const backupIdx = findCol('back')
+
+      // Hanya Backup Healthy yang diinput/dibaca dari Excel
+      backupHealthy = parseNum(
+        backupIdx !== -1
+          ? ihRow[backupIdx]
+          : ihRow[1] !== undefined
+            ? ihRow[1]
+            : ihRow[2] !== undefined
+              ? ihRow[2]
+              : ihRow[5],
+        backupHealthy,
+      )
     }
 
-    // 7. Infrastructure Utilization
+    // 7. Infrastructure Utilization (Opsional di Excel karena seluruh kolom CPU, RAM, Storage, WAN sudah dinamis dari API)
     if (
       firstCell.includes('7. INFRASTRUCTURE UTILIZATION') ||
       firstCell.includes('tbl_infrastructure_utilization')
     ) {
       const headerRow = (rows[i + 1] || []).map((h) => parseStr(h).toLowerCase())
-
       const findCol = (keywords: string[]) =>
         headerRow.findIndex((h) => keywords.every((kw) => h.includes(kw)))
 
-      const locIdx = findCol(['loc']) !== -1 ? findCol(['loc']) : (findCol(['lokasi']) !== -1 ? findCol(['lokasi']) : 0)
-      const memAvgIdx = findCol(['mem', 'avg'])
-      const memPeakIdx = findCol(['mem', 'peak'])
-      const storageIdx = findCol(['stor']) !== -1 ? findCol(['stor']) : findCol(['disk'])
-      const wanYtdIdx = findCol(['wan', 'ytd'])
-      const wanAvgIdx = findCol(['wan', 'avg'])
-      const wanPeakIdx = findCol(['wan', 'peak'])
-
-      const hasCpuInHeader = findCol(['cpu']) !== -1
+      const locIdx =
+        findCol(['loc']) !== -1
+          ? findCol(['loc'])
+          : findCol(['lokasi']) !== -1
+            ? findCol(['lokasi'])
+            : 0
 
       for (let j = i + 2; j < rows.length; j++) {
         const uRow = rows[j] || []
         const loc = parseStr(uRow[locIdx])
         if (!loc || loc.includes('8.') || loc.startsWith('tbl_')) break
 
-        // cpuAvg dan cpuPeak tidak lagi diambil dari excel karena sudah dinamis dari API
-        const cpuAvg = 0
-        const cpuPeak = 0
-
-        const memAvg = parseNum(
-          memAvgIdx !== -1 ? uRow[memAvgIdx] : (hasCpuInHeader ? uRow[3] : uRow[1])
-        )
-        const memPeak = parseNum(
-          memPeakIdx !== -1 ? uRow[memPeakIdx] : (hasCpuInHeader ? uRow[4] : uRow[2])
-        )
-        const storageUsed = parseNum(
-          storageIdx !== -1 ? uRow[storageIdx] : (hasCpuInHeader ? uRow[5] : uRow[3])
-        )
-        const wanYtd = parseNum(
-          wanYtdIdx !== -1 ? uRow[wanYtdIdx] : (hasCpuInHeader ? uRow[6] : uRow[4])
-        )
-        const wanAvg = parseNum(
-          wanAvgIdx !== -1 ? uRow[wanAvgIdx] : (hasCpuInHeader ? uRow[7] : uRow[5])
-        )
-        const wanPeak = parseNum(
-          wanPeakIdx !== -1 ? uRow[wanPeakIdx] : (hasCpuInHeader ? uRow[8] : uRow[6])
-        )
-        const status: 'Good' | 'Warning' | 'Critical' =
-          wanPeak >= 85
-            ? 'Critical'
-            : wanPeak >= 70
-              ? 'Warning'
-              : 'Good'
-
+        // Semua metrics (CPU, RAM, Storage Used, WAN) diisi dinamis oleh API
         utilization.push({
           location: loc,
-          cpuAvg,
-          cpuPeak,
-          memAvg,
-          memPeak,
-          storageUsed,
-          wanYtd,
-          wanAvg,
-          wanPeak,
-          status,
+          cpuAvg: 0,
+          cpuPeak: 0,
+          memAvg: 0,
+          memPeak: 0,
+          storageUsed: 0,
+          wanYtd: 0,
+          wanAvg: 0,
+          wanPeak: 0,
+          status: 'Good' as const,
           cpuSparkline: [0, 0, 0, 0, 0],
-          memSparkline: [
-            Math.max(1, memAvg * 0.85),
-            Math.max(1, memAvg * 0.92),
-            memAvg,
-            Math.max(1, memAvg * 0.96),
-            memPeak > 0 ? memPeak : memAvg * 1.1,
-          ],
-          wanSparkline: [
-            Math.max(1, wanAvg * 0.7),
-            Math.max(1, wanAvg * 0.85),
-            wanAvg,
-            Math.max(1, wanAvg * 0.9),
-            wanPeak > 0 ? wanPeak : wanAvg * 1.3,
-          ],
+          memSparkline: [0, 0, 0, 0, 0],
+          wanSparkline: [0, 0, 0, 0, 0],
         })
       }
     }
 
-    // 8. PICA Action Plan
-    if (firstCell.includes('8. PICA ACTION PLAN') || firstCell.includes('tbl_pica')) {
+    // PICA Action Plan
+    if (firstCell.includes('PICA ACTION PLAN') || firstCell.includes('tbl_pica')) {
       for (let j = i + 2; j < rows.length; j++) {
         const pRow = rows[j] || []
         const pId = parseStr(pRow[0])
@@ -477,17 +446,11 @@ export function parseWorksheetToDashboardData(
     },
     {
       name: 'Server',
-      sla: serverSla,
+      sla: 0,
       target: targetSla,
-      status: getKpiStatus(serverSla, targetSla),
+      status: 'warning',
       color: 'purple',
-      sparklineData: [
-        Number((serverSla - 0.5).toFixed(2)),
-        Number((serverSla + 0.3).toFixed(2)),
-        Number((serverSla - 0.2).toFixed(2)),
-        Number((serverSla + 0.4).toFixed(2)),
-        serverSla,
-      ],
+      sparklineData: [0, 0, 0, 0, 0],
     },
     {
       name: 'Application',
@@ -518,6 +481,13 @@ export function parseWorksheetToDashboardData(
       ],
     },
   ]
+
+  // Overall SLA dihitung dari: (SLA network + SLA server + SLA application + SLA security service) / 4
+  const netVal = services.find((s) => s.name.toLowerCase() === 'network')?.sla ?? 0
+  const srvVal = services.find((s) => s.name.toLowerCase() === 'server')?.sla ?? 0
+  const appVal = services.find((s) => s.name.toLowerCase() === 'application')?.sla ?? 0
+  const secVal = services.find((s) => s.name.toLowerCase().includes('security'))?.sla ?? 0
+  overallSla = Number(((netVal + srvVal + appVal + secVal) / 4).toFixed(2))
 
   const defaultHighlights: KeyHighlight[] =
     highlights.length > 0
@@ -581,34 +551,47 @@ export function parseWorksheetToDashboardData(
     patchCompliance,
   }
 
+  const defaultLocations = ['Semanggi', 'BSD', 'Pluit']
+  const finalUtilization = utilization.length > 0 ? utilization : []
+  for (const loc of defaultLocations) {
+    if (!finalUtilization.some((u) => u.location.toLowerCase().trim() === loc.toLowerCase())) {
+      finalUtilization.push({
+        location: loc,
+        cpuAvg: 0,
+        cpuPeak: 0,
+        memAvg: 0,
+        memPeak: 0,
+        storageUsed: 0,
+        wanAvg: 0,
+        wanPeak: 0,
+        wanYtd: 0,
+        status: 'Good' as const,
+        cpuSparkline: [0, 0, 0, 0, 0],
+        memSparkline: [0, 0, 0, 0, 0],
+        wanSparkline: [0, 0, 0, 0, 0],
+      })
+    }
+  }
+
+  // Storage Healthy dihitung dari 100% - rata-rata Storage Used (Semanggi + BSD + Pluit) / 3 jika ada nilai
+  const semanggiUtil =
+    finalUtilization.find((u) => u.location.toLowerCase().includes('semanggi'))?.storageUsed ?? 0
+  const bsdUtil =
+    finalUtilization.find((u) => u.location.toLowerCase().includes('bsd'))?.storageUsed ?? 0
+  const pluitUtil =
+    finalUtilization.find((u) => u.location.toLowerCase().includes('pluit'))?.storageUsed ?? 0
+  if (semanggiUtil > 0 || bsdUtil > 0 || pluitUtil > 0) {
+    const avgUsed = (semanggiUtil + bsdUtil + pluitUtil) / 3
+    storageHealthy = Number((100 - avgUsed).toFixed(2))
+  }
+
   const infraHealth: InfraHealthMetric[] = [
     { name: 'Network Devices', value: netHealthy },
     { name: 'Servers', value: serverHealthy },
-    { name: 'Virtual Machines', value: vmHealthy },
-    { name: 'Storage', value: storageHealthy },
+    // { name: 'Virtual Machines', value: vmHealthy }, // Dinonaktifkan sementara
+    { name: 'Free Storage', value: storageHealthy },
     { name: 'Backup', value: backupHealthy },
   ]
-
-  const finalUtilization =
-    utilization.length > 0
-      ? utilization
-      : [
-          {
-            location: 'Semanggi',
-            cpuAvg: 0,
-            cpuPeak: 0,
-            memAvg: 40.22,
-            memPeak: 0,
-            storageUsed: 39.9,
-            wanAvg: 12.33,
-            wanPeak: 106.82,
-            wanYtd: 87.17,
-            status: 'Critical' as const,
-            cpuSparkline: [0, 0, 0, 0, 0],
-            memSparkline: [60, 62, 65, 63, 82],
-            wanSparkline: [30, 35, 40, 39, 81],
-          },
-        ]
 
   return {
     reportingPeriod: periodName,
