@@ -6,8 +6,6 @@ import dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import axios from 'axios'
 
-
-
 dotenv.config()
 
 const app = express()
@@ -29,7 +27,8 @@ app.get('/api/server-sla', async (req, res) => {
     const to = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DDTHH:mm:ss[Z]')
 
     const grafanaUrl = process.env.GRAFANA_URL || 'https://zbx.uaj.my.id/grafana/api/ds/query'
-    const grafanaToken = process.env.GRAFANA_TOKEN || 'glsa_yGT5yCWQIY7IJVNHC7Q5hDel23hFAwrA_de492d1f'
+    const grafanaToken =
+      process.env.GRAFANA_TOKEN || 'glsa_yGT5yCWQIY7IJVNHC7Q5hDel23hFAwrA_de492d1f'
     const datasourceUid = process.env.GRAFANA_DATASOURCE_UID || 'eg0one0g7arcwc'
 
     const rawSql = `SELECT ROUND(AVG(device_uptime), 2) AS uptime
@@ -104,33 +103,35 @@ LEAST(
     })
   } catch (error) {
     console.error('Error fetching Server SLA from Grafana:', error.message)
-    res.status(500).json({ error: 'Failed to fetch Server SLA from Grafana', details: error.message })
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch Server SLA from Grafana', details: error.message })
   }
 })
 
 // Endpoint SLA Application (Webhook: http://10.10.10.204:5678/webhook/sla_application?month={{month}}&year={{year}})
 app.get(['/api/application-sla', '/api/sla-application'], async (req, res) => {
   try {
-    let { month, year, period } = req.query;
+    let { month, year, period } = req.query
 
     if (!month || !year) {
-      const p = period || dayjs().format('YYYY-MM'); // e.g. 2026-10
-      const d = dayjs(`${p}-01`);
-      year = d.format('YYYY');
-      month = String(d.month() + 1); // 1, 2, ..., 12 (tanpa leading zero)
+      const p = period || dayjs().format('YYYY-MM') // e.g. 2026-10
+      const d = dayjs(`${p}-01`)
+      year = d.format('YYYY')
+      month = String(d.month() + 1) // 1, 2, ..., 12 (tanpa leading zero)
     } else {
-      month = String(parseInt(month, 10)); // pastikan tanpa leading zero: 1, 2, 3.. dst
+      month = String(parseInt(month, 10)) // pastikan tanpa leading zero: 1, 2, 3.. dst
     }
 
-    const targetUrl = `http://10.10.10.204:5678/webhook/sla_application?month=${month}&year=${year}`;
-    console.log(`[SLA APPLICATION] Fetching from: ${targetUrl}`);
+    const targetUrl = `http://10.10.10.204:5678/webhook/sla_application?month=${month}&year=${year}`
+    console.log(`[SLA APPLICATION] Fetching from: ${targetUrl}`)
 
-    const response = await axios.get(targetUrl, { timeout: 10000 });
-    const data = response.data;
+    const response = await axios.get(targetUrl, { timeout: 10000 })
+    const data = response.data
 
-    let sla = null;
+    let sla = null
     if (data?.values && Array.isArray(data.values) && data.values[0] && data.values[0][0] != null) {
-      sla = Number(Number(data.values[0][0]).toFixed(2));
+      sla = Number(Number(data.values[0][0]).toFixed(2))
     }
 
     res.json({
@@ -138,37 +139,36 @@ app.get(['/api/application-sla', '/api/sla-application'], async (req, res) => {
       year,
       sla,
       data,
-    });
+    })
   } catch (error) {
-    console.error('Error fetching SLA Application:', error.message);
-    res.status(500).json({ error: 'Failed to fetch SLA Application', details: error.message });
+    console.error('Error fetching SLA Application:', error.message)
+    res.status(500).json({ error: 'Failed to fetch SLA Application', details: error.message })
   }
-});
-
+})
 
 // Endpoint Security Services SLA (Webhook: http://10.10.10.204:5678/webhook/security_service?month=...&year=...)
 app.get(['/api/security-service-sla', '/api/security-services-sla'], async (req, res) => {
   try {
-    let { month, year, period } = req.query;
+    let { month, year, period } = req.query
 
     if (!month || !year) {
-      const p = period || dayjs().format('YYYY-MM'); // e.g. 2026-10
-      const d = dayjs(`${p}-01`);
-      year = d.format('YYYY');
-      month = String(d.month() + 1); // 1, 2, ..., 12 (tanpa leading zero)
+      const p = period || dayjs().format('YYYY-MM') // e.g. 2026-10
+      const d = dayjs(`${p}-01`)
+      year = d.format('YYYY')
+      month = String(d.month() + 1) // 1, 2, ..., 12 (tanpa leading zero)
     } else {
-      month = String(parseInt(month, 10)); // pastikan tanpa leading zero: 1, 2, 3.. dst
+      month = String(parseInt(month, 10)) // pastikan tanpa leading zero: 1, 2, 3.. dst
     }
 
-    const targetUrl = `http://10.10.10.204:5678/webhook/security_service?month=${month}&year=${year}`;
-    console.log(`[SLA SECURITY SERVICES] Fetching from: ${targetUrl}`);
+    const targetUrl = `http://10.10.10.204:5678/webhook/security_service?month=${month}&year=${year}`
+    console.log(`[SLA SECURITY SERVICES] Fetching from: ${targetUrl}`)
 
-    const response = await axios.get(targetUrl, { timeout: 10000 });
-    const data = response.data;
+    const response = await axios.get(targetUrl, { timeout: 10000 })
+    const data = response.data
 
-    let sla = null;
+    let sla = null
     if (data?.values && Array.isArray(data.values) && data.values[0] && data.values[0][0] != null) {
-      sla = Number(Number(data.values[0][0]).toFixed(2));
+      sla = Number(Number(data.values[0][0]).toFixed(2))
     }
 
     res.json({
@@ -176,13 +176,12 @@ app.get(['/api/security-service-sla', '/api/security-services-sla'], async (req,
       year,
       sla,
       data,
-    });
+    })
   } catch (error) {
-    console.error('Error fetching SLA Security Services:', error.message);
-    res.status(500).json({ error: 'Failed to fetch SLA Security Services', details: error.message });
+    console.error('Error fetching SLA Security Services:', error.message)
+    res.status(500).json({ error: 'Failed to fetch SLA Security Services', details: error.message })
   }
-});
-
+})
 
 // Template Endpoint untuk Connect DB via SSH (Bisa disesuaikan nanti)
 app.get('/api/data', (req, res) => {
@@ -230,9 +229,9 @@ app.get('/api/data', (req, res) => {
 
 // Endpoint SLA Network Dinamis
 app.get('/api/sla-network', (req, res) => {
-  const period = req.query.period || dayjs().format('YYYY-MM'); // contoh: '2026-08'
-  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss');
-  const end = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss');
+  const period = req.query.period || dayjs().format('YYYY-MM') // contoh: '2026-08'
+  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss')
+  const end = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss')
 
   const query = `
 WITH t AS (
@@ -276,7 +275,7 @@ per_site AS (
 )
 SELECT ROUND(AVG(sla), 2) AS SLA
 FROM per_site;
-  `;
+  `
 
   const sshClient = new Client()
   sshClient
@@ -304,7 +303,7 @@ FROM per_site;
               period: period,
               startDate: start,
               endDate: end,
-              data: rows
+              data: rows,
             })
           } catch (dbErr) {
             sshClient.end()
@@ -326,9 +325,12 @@ FROM per_site;
 
 // Endpoint Infra Health Dinamis
 app.get('/api/infra-health', (req, res) => {
-  const period = req.query.period || dayjs().format('YYYY-MM');
-  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss');
-  const nextMonthStart = dayjs(`${period}-01`).add(1, 'month').startOf('month').format('YYYY-MM-DD HH:mm:ss');
+  const period = req.query.period || dayjs().format('YYYY-MM')
+  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss')
+  const nextMonthStart = dayjs(`${period}-01`)
+    .add(1, 'month')
+    .startOf('month')
+    .format('YYYY-MM-DD HH:mm:ss')
 
   const query = `
 SELECT
@@ -396,7 +398,7 @@ LEFT JOIN (
     GROUP BY triggerid
 ) d
     ON d.triggerid = t.triggerid;
-  `;
+  `
 
   const sshClient = new Client()
   sshClient
@@ -424,7 +426,7 @@ LEFT JOIN (
               period: period,
               startDate: start,
               nextMonthStartDate: nextMonthStart,
-              data: rows
+              data: rows,
             })
           } catch (dbErr) {
             sshClient.end()
@@ -447,94 +449,99 @@ LEFT JOIN (
 // Endpoint WAN Utilization
 app.get('/api/wan-utilization', async (req, res) => {
   try {
-    const period = req.query.period || dayjs().format('YYYY-MM');
-    const location = req.query.location?.toLowerCase() || 'semanggi';
-    const isYtd = req.query.ytd === 'true';
-    
+    const period = req.query.period || dayjs().format('YYYY-MM')
+    const location = req.query.location?.toLowerCase() || 'semanggi'
+    const isYtd = req.query.ytd === 'true'
+
     // Jika YTD, startEpoch dimulai dari 1 Januari tahun yang sama
-    const startEpoch = isYtd 
-      ? dayjs(`${period.substring(0, 4)}-01-01`).startOf('month').unix()
-      : dayjs(`${period}-01`).startOf('month').unix();
-      
-    const endEpoch = dayjs(`${period}-01`).endOf('month').unix();
+    const startEpoch = isYtd
+      ? dayjs(`${period.substring(0, 4)}-01-01`)
+          .startOf('month')
+          .unix()
+      : dayjs(`${period}-01`).startOf('month').unix()
 
-    let rrdPath = '';
+    const endEpoch = dayjs(`${period}-01`).endOf('month').unix()
+
+    let rrdPath = ''
     if (location === 'semanggi') {
-      rrdPath = '/opt/librenms/rrd/10.10.0.2/port-id1430.rrd';
+      rrdPath = '/opt/librenms/rrd/10.10.0.2/port-id1430.rrd'
     } else if (location === 'pluit') {
-      rrdPath = '/opt/librenms/rrd/10.5.0.1/port-id119072.rrd';
+      rrdPath = '/opt/librenms/rrd/10.5.0.1/port-id119072.rrd'
     } else if (location === 'bsd') {
-      rrdPath = '/opt/librenms/rrd/10.13.3.2/port-id10913.rrd';
+      rrdPath = '/opt/librenms/rrd/10.13.3.2/port-id10913.rrd'
     } else {
-      return res.status(400).json({ error: 'Unknown location' });
+      return res.status(400).json({ error: 'Unknown location' })
     }
 
-    const url = `http://10.10.10.90:9000/?rrd_path=${rrdPath}&epoch_start_time=${startEpoch}&epoch_end_time=${endEpoch}`;
-    console.log(`[WAN UTILIZATION] Fetching from: ${url}`);
-    
-    const response = await axios.get(url);
+    const url = `http://10.10.10.90:9000/?rrd_path=${rrdPath}&epoch_start_time=${startEpoch}&epoch_end_time=${endEpoch}`
+    console.log(`[WAN UTILIZATION] Fetching from: ${url}`)
+
+    const response = await axios.get(url)
     // Response dari LibreNMS berbentuk { meta: {...}, data: [...] }
-    const data = response.data?.data;
-    
+    const data = response.data?.data
+
     if (!Array.isArray(data) || data.length === 0) {
-      console.log(`[WAN UTILIZATION] No data array returned. Data:`, typeof data === 'object' ? JSON.stringify(data).substring(0, 100) : data);
-      return res.json({ avg: 0 });
+      console.log(
+        `[WAN UTILIZATION] No data array returned. Data:`,
+        typeof data === 'object' ? JSON.stringify(data).substring(0, 100) : data,
+      )
+      return res.json({ avg: 0 })
     }
-    console.log(`[WAN UTILIZATION] Data length: ${data.length}`);
+    console.log(`[WAN UTILIZATION] Data length: ${data.length}`)
 
     // Kalkulasi Average (contoh menggunakan inoctets, dikonversi ke persentase atau Mbps)
     // Asumsi: nilai inoctets adalah Bytes per second.
-    // Kita hitung rata-rata inoctets dan outoctets, lalu ambil yang terbesar, 
+    // Kita hitung rata-rata inoctets dan outoctets, lalu ambil yang terbesar,
     // dan ubah menjadi persentase dengan asumsi kapasitas port 1 Gbps (1,000,000,000 bps)
     // Silakan sesuaikan ifSpeed (kapasitas port) di bawah ini jika berbeda (misal 100Mbps = 100,000,000)
-    
-    let totalIn = 0;
-    let totalOut = 0;
-    let maxIn = 0;
-    let maxOut = 0;
-    let count = 0;
 
-    data.forEach(row => {
+    let totalIn = 0
+    let totalOut = 0
+    let maxIn = 0
+    let maxOut = 0
+    let count = 0
+
+    data.forEach((row) => {
       if (row.inoctets != null && row.outoctets != null) {
-        totalIn += row.inoctets;
-        totalOut += row.outoctets;
-        
-        if (row.inoctets > maxIn) maxIn = row.inoctets;
-        if (row.outoctets > maxOut) maxOut = row.outoctets;
-        
-        count++;
+        totalIn += row.inoctets
+        totalOut += row.outoctets
+
+        if (row.inoctets > maxIn) maxIn = row.inoctets
+        if (row.outoctets > maxOut) maxOut = row.outoctets
+
+        count++
       }
-    });
+    })
 
-    if (count === 0) return res.json({ avg: 0, peak: 0 });
+    if (count === 0) return res.json({ avg: 0, peak: 0 })
 
-    const avgInBps = totalIn / count;
-    const avgOutBps = totalOut / count;
-    
+    const avgInBps = totalIn / count
+    const avgOutBps = totalOut / count
+
     // Tentukan kecepatan port berdasarkan lokasi
     // Semanggi = 1.2 Gbps (1,200,000,000 bps)
     // Pluit = 1 Gbps (1,000,000,000 bps)
     // BSD = 800 Mbps (800,000,000 bps)
-    let PORT_SPEED_BPS = 1000000000;
-    if (location === 'semanggi') PORT_SPEED_BPS = 1200000000;
-    else if (location === 'pluit') PORT_SPEED_BPS = 1000000000;
-    else if (location === 'bsd') PORT_SPEED_BPS = 800000000;
-    
+    let PORT_SPEED_BPS = 1000000000
+    if (location === 'semanggi') PORT_SPEED_BPS = 1200000000
+    else if (location === 'pluit') PORT_SPEED_BPS = 1000000000
+    else if (location === 'bsd') PORT_SPEED_BPS = 800000000
+
     // Sesuai request, AVG dihitung menggunakan rumus khusus:
     // (mean(inoctets) + mean(outoctets)) * 8 / PORT_SPEED_BPS * 100
-    let utilizationPercent = ((avgInBps + avgOutBps) * 8 / PORT_SPEED_BPS) * 100;
-    
+    let utilizationPercent = (((avgInBps + avgOutBps) * 8) / PORT_SPEED_BPS) * 100
+
     // Sesuai request, Peak dihitung menggunakan rumus khusus:
     // (max(inoctets) + max(outoctets)) * 8 / PORT_SPEED_BPS * 100
-    let peakPercent = ((maxIn + maxOut) * 8 / PORT_SPEED_BPS) * 100;
+    let peakPercent = (((maxIn + maxOut) * 8) / PORT_SPEED_BPS) * 100
 
     // Untuk response (jika dibutuhkan)
-    const avgInBits = avgInBps * 8;
-    const avgOutBits = avgOutBps * 8;
+    const avgInBits = avgInBps * 8
+    const avgOutBits = avgOutBps * 8
 
     // Bulatkan ke 2 desimal
-    utilizationPercent = Math.round(utilizationPercent * 100) / 100;
-    peakPercent = Math.round(peakPercent * 100) / 100;
+    utilizationPercent = Math.round(utilizationPercent * 100) / 100
+    peakPercent = Math.round(peakPercent * 100) / 100
 
     res.json({
       period,
@@ -543,54 +550,55 @@ app.get('/api/wan-utilization', async (req, res) => {
       avg: utilizationPercent,
       peak: peakPercent,
       avgInMbps: (avgInBits / 1000000).toFixed(2),
-      avgOutMbps: (avgOutBits / 1000000).toFixed(2)
-    });
-
+      avgOutMbps: (avgOutBits / 1000000).toFixed(2),
+    })
   } catch (error) {
-    console.error('Error fetching WAN utilization:', error.message);
-    res.status(500).json({ error: 'Failed to fetch WAN utilization' });
+    console.error('Error fetching WAN utilization:', error.message)
+    res.status(500).json({ error: 'Failed to fetch WAN utilization' })
   }
 })
 
 // Endpoint CPU Utilization
 app.get(['/api/cpu-utilization', '/api/cpu', '/cpu'], async (req, res) => {
   try {
-    let { from, to, period, location } = req.query;
+    let { from, to, period, location } = req.query
 
     // Jika from & to belum dispesifikasi, hitung epoch ms awal s/d akhir bulan berdasarkan period (YYYY-MM)
     if (!from || !to) {
-      const p = period || dayjs().format('YYYY-MM');
-      from = dayjs(`${p}-01`).startOf('month').valueOf();
-      to = dayjs(`${p}-01`).endOf('month').valueOf();
+      const p = period || dayjs().format('YYYY-MM')
+      from = dayjs(`${p}-01`).startOf('month').valueOf()
+      to = dayjs(`${p}-01`).endOf('month').valueOf()
     }
 
-    const targetUrl = `http://10.10.10.64:8088/cpu?from=${from}&to=${to}`;
-    console.log(`[CPU UTILIZATION] Fetching from: ${targetUrl}`);
+    const targetUrl = `http://10.10.10.64:8088/cpu?from=${from}&to=${to}`
+    console.log(`[CPU UTILIZATION] Fetching from: ${targetUrl}`)
 
-    const response = await axios.get(targetUrl, { timeout: 10000 });
-    const data = response.data;
+    const response = await axios.get(targetUrl, { timeout: 10000 })
+    const data = response.data
 
     // Jika request menyertakan filter lokasi spesifik
     if (location && Array.isArray(data)) {
-      const loc = location.toLowerCase();
-      const matched = data.find((d) =>
-        (d.lokasi || '').toLowerCase().includes(loc) || loc.includes((d.lokasi || '').toLowerCase())
-      );
-      return res.json(matched || { lokasi: location, cpu_avg: 0, cpu_peak: 0 });
+      const loc = location.toLowerCase()
+      const matched = data.find(
+        (d) =>
+          (d.lokasi || '').toLowerCase().includes(loc) ||
+          loc.includes((d.lokasi || '').toLowerCase()),
+      )
+      return res.json(matched || { lokasi: location, cpu_avg: 0, cpu_peak: 0 })
     }
 
-    res.json(data);
+    res.json(data)
   } catch (error) {
-    console.error('Error fetching CPU utilization:', error.message);
-    res.status(500).json({ error: 'Failed to fetch CPU utilization', details: error.message });
+    console.error('Error fetching CPU utilization:', error.message)
+    res.status(500).json({ error: 'Failed to fetch CPU utilization', details: error.message })
   }
-});
+})
 
 // Endpoint RAM / Memory Utilization
 app.get(['/api/ram-utilization', '/api/memory-utilization'], (req, res) => {
-  const period = req.query.period || dayjs().format('YYYY-MM'); // contoh: '2026-10'
-  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss');
-  const end = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss');
+  const period = req.query.period || dayjs().format('YYYY-MM') // contoh: '2026-10'
+  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss')
+  const end = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss')
 
   const query = `
 SELECT
@@ -699,20 +707,20 @@ FROM
   ) t
 ORDER BY
   FIELD(lokasi, 'Semanggi', 'BSD', 'Pluit');
-  `;
+  `
 
   const fallbackGrafana = async () => {
     try {
-      const grafanaUrl = process.env.GRAFANA_URL || 'https://zbx.uaj.my.id/grafana/api/ds/query';
-      const grafanaToken = process.env.GRAFANA_TOKEN || 'glsa_yGT5yCWQIY7IJVNHC7Q5hDel23hFAwrA_de492d1f';
-      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || 'eftontc84z3eoc';
+      const grafanaUrl = process.env.GRAFANA_URL || ''
+      const grafanaToken = process.env.GRAFANA_TOKEN || ''
+      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || ''
 
-      const fromMs = dayjs(`${period}-01`).startOf('month').valueOf();
-      const toMs = dayjs(`${period}-01`).endOf('month').valueOf();
+      const fromMs = dayjs(`${period}-01`).startOf('month').valueOf()
+      const toMs = dayjs(`${period}-01`).endOf('month').valueOf()
 
       const rawSql = query
         .replace(`UNIX_TIMESTAMP('${start}')`, '$__unixEpochFrom()')
-        .replace(`UNIX_TIMESTAMP('${end}')`, '$__unixEpochTo()');
+        .replace(`UNIX_TIMESTAMP('${end}')`, '$__unixEpochTo()')
 
       const payload = {
         from: String(fromMs),
@@ -725,7 +733,7 @@ ORDER BY
             format: 'table',
           },
         ],
-      };
+      }
 
       const response = await axios.post(grafanaUrl, payload, {
         headers: {
@@ -733,11 +741,11 @@ ORDER BY
           'Content-Type': 'application/json',
         },
         timeout: 15000,
-      });
+      })
 
-      const values = response.data?.results?.A?.frames?.[0]?.data?.values;
+      const values = response.data?.results?.A?.frames?.[0]?.data?.values
       if (Array.isArray(values) && values[0]) {
-        const locations = values[0];
+        const locations = values[0]
         const formatted = locations.map((loc, idx) => ({
           lokasi: loc,
           totalRam: values[1]?.[idx] || 0,
@@ -746,19 +754,23 @@ ORDER BY
           usage: values[4]?.[idx] != null ? Number(values[4][idx]) : 0,
           average: values[5]?.[idx] != null ? Number(values[5][idx]) : 0,
           max: values[6]?.[idx] != null ? Number(values[6][idx]) : 0,
-          avgPercent: values[5]?.[idx] != null ? Number((Number(values[5][idx]) * 100).toFixed(2)) : 0,
-          peakPercent: values[6]?.[idx] != null ? Number((Number(values[6][idx]) * 100).toFixed(2)) : 0,
-        }));
-        return res.json({ period, startDate: start, endDate: end, data: formatted });
+          avgPercent:
+            values[5]?.[idx] != null ? Number((Number(values[5][idx]) * 100).toFixed(2)) : 0,
+          peakPercent:
+            values[6]?.[idx] != null ? Number((Number(values[6][idx]) * 100).toFixed(2)) : 0,
+        }))
+        return res.json({ period, startDate: start, endDate: end, data: formatted })
       }
-      return res.json({ period, startDate: start, endDate: end, data: [] });
+      return res.json({ period, startDate: start, endDate: end, data: [] })
     } catch (gErr) {
-      console.error('Grafana RAM fallback failed:', gErr.message);
-      return res.status(500).json({ error: 'Failed to fetch RAM utilization', details: gErr.message });
+      console.error('Grafana RAM fallback failed:', gErr.message)
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch RAM utilization', details: gErr.message })
     }
-  };
+  }
 
-  const sshClient = new Client();
+  const sshClient = new Client()
   sshClient
     .on('ready', () => {
       sshClient.forwardOut(
@@ -768,9 +780,9 @@ ORDER BY
         parseInt(process.env.DB_PORT || '3306'),
         async (err, stream) => {
           if (err) {
-            console.warn('SSH Forwarding Error, attempting Grafana fallback:', err.message);
-            sshClient.end();
-            return fallbackGrafana();
+            console.warn('SSH Forwarding Error, attempting Grafana fallback:', err.message)
+            sshClient.end()
+            return fallbackGrafana()
           }
           try {
             const db = await mysql.createConnection({
@@ -778,10 +790,10 @@ ORDER BY
               password: process.env.DB_PASSWORD,
               database: process.env.DB_NAME,
               stream: stream,
-            });
-            const [rows] = await db.execute(query);
-            db.end();
-            sshClient.end();
+            })
+            const [rows] = await db.execute(query)
+            db.end()
+            sshClient.end()
 
             const formatted = rows.map((r) => ({
               lokasi: r.Lokasi,
@@ -791,41 +803,42 @@ ORDER BY
               usage: r['Usage'] != null ? Number(r['Usage']) : 0,
               average: r['Average'] != null ? Number(r['Average']) : 0,
               max: r['Max'] != null ? Number(r['Max']) : 0,
-              avgPercent: r['Average'] != null ? Number((Number(r['Average']) * 100).toFixed(2)) : 0,
+              avgPercent:
+                r['Average'] != null ? Number((Number(r['Average']) * 100).toFixed(2)) : 0,
               peakPercent: r['Max'] != null ? Number((Number(r['Max']) * 100).toFixed(2)) : 0,
-            }));
+            }))
 
             res.json({
               period,
               startDate: start,
               endDate: end,
               data: formatted,
-            });
+            })
           } catch (dbErr) {
-            sshClient.end();
-            console.warn('Database Error, attempting Grafana fallback:', dbErr.message);
-            return fallbackGrafana();
+            sshClient.end()
+            console.warn('Database Error, attempting Grafana fallback:', dbErr.message)
+            return fallbackGrafana()
           }
         },
-      );
+      )
     })
     .on('error', (err) => {
-      console.warn('SSH Connection Error, attempting Grafana fallback:', err.message);
-      fallbackGrafana();
+      console.warn('SSH Connection Error, attempting Grafana fallback:', err.message)
+      fallbackGrafana()
     })
     .connect({
       host: process.env.SSH_HOST,
       port: parseInt(process.env.SSH_PORT || '22'),
       username: process.env.SSH_USER,
       password: process.env.SSH_PASSWORD,
-    });
-});
+    })
+})
 
 // Endpoint Storage Utilization (Semanggi, BSD, Pluit)
 app.get(['/api/storage-utilization', '/api/storage-usage'], (req, res) => {
-  const period = req.query.period || dayjs().format('YYYY-MM'); // contoh: '2026-10'
-  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss');
-  const end = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss');
+  const period = req.query.period || dayjs().format('YYYY-MM') // contoh: '2026-10'
+  const start = dayjs(`${period}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss')
+  const end = dayjs(`${period}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss')
 
   const query = `
 SELECT
@@ -878,20 +891,20 @@ FROM (
   GROUP BY Lokasi, d
 ) r
 ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
-  `;
+  `
 
   const fallbackGrafana = async () => {
     try {
-      const grafanaUrl = process.env.GRAFANA_URL || 'https://zbx.uaj.my.id/grafana/api/ds/query';
-      const grafanaToken = process.env.GRAFANA_TOKEN || 'glsa_yGT5yCWQIY7IJVNHC7Q5hDel23hFAwrA_de492d1f';
-      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || 'eftontc84z3eoc';
+      const grafanaUrl = process.env.GRAFANA_URL || ''
+      const grafanaToken = process.env.GRAFANA_TOKEN || ''
+      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || ''
 
-      const fromMs = dayjs(`${period}-01`).startOf('month').valueOf();
-      const toMs = dayjs(`${period}-01`).endOf('month').valueOf();
+      const fromMs = dayjs(`${period}-01`).startOf('month').valueOf()
+      const toMs = dayjs(`${period}-01`).endOf('month').valueOf()
 
       const rawSql = query
         .replace(new RegExp(`UNIX_TIMESTAMP\\('${start}'\\)`, 'g'), '$__unixEpochFrom()')
-        .replace(new RegExp(`UNIX_TIMESTAMP\\('${end}'\\)`, 'g'), '$__unixEpochTo()');
+        .replace(new RegExp(`UNIX_TIMESTAMP\\('${end}'\\)`, 'g'), '$__unixEpochTo()')
 
       const payload = {
         from: String(fromMs),
@@ -904,7 +917,7 @@ ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
             format: 'table',
           },
         ],
-      };
+      }
 
       const response = await axios.post(grafanaUrl, payload, {
         headers: {
@@ -912,18 +925,19 @@ ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
           'Content-Type': 'application/json',
         },
         timeout: 15000,
-      });
+      })
 
-      const values = response.data?.results?.A?.frames?.[0]?.data?.values;
+      const values = response.data?.results?.A?.frames?.[0]?.data?.values
       if (Array.isArray(values) && values[0]) {
-        const locations = values[0];
+        const locations = values[0]
         const formatted = locations.map((loc, idx) => {
-          const rawUsage = values[4]?.[idx];
-          const usagePct = rawUsage != null
-            ? Number(Number(rawUsage).toFixed(2))
-            : (values[1]?.[idx] && values[3]?.[idx]
+          const rawUsage = values[4]?.[idx]
+          const usagePct =
+            rawUsage != null
+              ? Number(Number(rawUsage).toFixed(2))
+              : values[1]?.[idx] && values[3]?.[idx]
                 ? Number(((Number(values[3][idx]) / Number(values[1][idx])) * 100).toFixed(2))
-                : 0);
+                : 0
           return {
             lokasi: loc,
             totalTb: values[1]?.[idx] != null ? Number(Number(values[1][idx]).toFixed(2)) : 0,
@@ -931,18 +945,20 @@ ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
             usedTb: values[3]?.[idx] != null ? Number(Number(values[3][idx]).toFixed(2)) : 0,
             usage: usagePct,
             storageUsed: usagePct,
-          };
-        });
-        return res.json({ period, startDate: start, endDate: end, data: formatted });
+          }
+        })
+        return res.json({ period, startDate: start, endDate: end, data: formatted })
       }
-      return res.json({ period, startDate: start, endDate: end, data: [] });
+      return res.json({ period, startDate: start, endDate: end, data: [] })
     } catch (gErr) {
-      console.error('Grafana Storage fallback failed:', gErr.message);
-      return res.status(500).json({ error: 'Failed to fetch Storage utilization', details: gErr.message });
+      console.error('Grafana Storage fallback failed:', gErr.message)
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch Storage utilization', details: gErr.message })
     }
-  };
+  }
 
-  const sshClient = new Client();
+  const sshClient = new Client()
   sshClient
     .on('ready', () => {
       sshClient.forwardOut(
@@ -952,9 +968,9 @@ ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
         parseInt(process.env.DB_PORT || '3306'),
         async (err, stream) => {
           if (err) {
-            console.warn('SSH Forwarding Error, attempting Grafana fallback:', err.message);
-            sshClient.end();
-            return fallbackGrafana();
+            console.warn('SSH Forwarding Error, attempting Grafana fallback:', err.message)
+            sshClient.end()
+            return fallbackGrafana()
           }
           try {
             const db = await mysql.createConnection({
@@ -962,52 +978,54 @@ ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
               password: process.env.DB_PASSWORD,
               database: process.env.DB_NAME,
               stream: stream,
-            });
-            const [rows] = await db.execute(query);
-            db.end();
-            sshClient.end();
+            })
+            const [rows] = await db.execute(query)
+            db.end()
+            sshClient.end()
 
             const formatted = rows.map((r) => {
-              const usagePct = r['Usage (%)'] != null
-                ? Number(Number(r['Usage (%)']).toFixed(2))
-                : (r['Total (TB)'] && r['Used (TB)']
+              const usagePct =
+                r['Usage (%)'] != null
+                  ? Number(Number(r['Usage (%)']).toFixed(2))
+                  : r['Total (TB)'] && r['Used (TB)']
                     ? Number(((Number(r['Used (TB)']) / Number(r['Total (TB)'])) * 100).toFixed(2))
-                    : 0);
+                    : 0
               return {
                 lokasi: r.Lokasi,
                 totalTb: r['Total (TB)'] != null ? Number(Number(r['Total (TB)']).toFixed(2)) : 0,
-                availableTb: r['Available (TB)'] != null ? Number(Number(r['Available (TB)']).toFixed(2)) : 0,
+                availableTb:
+                  r['Available (TB)'] != null ? Number(Number(r['Available (TB)']).toFixed(2)) : 0,
                 usedTb: r['Used (TB)'] != null ? Number(Number(r['Used (TB)']).toFixed(2)) : 0,
                 usage: usagePct,
                 storageUsed: usagePct,
-              };
-            });
+              }
+            })
 
             res.json({
               period,
               startDate: start,
               endDate: end,
               data: formatted,
-            });
+            })
           } catch (dbErr) {
-            sshClient.end();
-            console.warn('Database Error, attempting Grafana fallback:', dbErr.message);
-            return fallbackGrafana();
+            sshClient.end()
+            console.warn('Database Error, attempting Grafana fallback:', dbErr.message)
+            return fallbackGrafana()
           }
         },
-      );
+      )
     })
     .on('error', (err) => {
-      console.warn('SSH Connection Error, attempting Grafana fallback:', err.message);
-      fallbackGrafana();
+      console.warn('SSH Connection Error, attempting Grafana fallback:', err.message)
+      fallbackGrafana()
     })
     .connect({
       host: process.env.SSH_HOST,
       port: parseInt(process.env.SSH_PORT || '22'),
       username: process.env.SSH_USER,
       password: process.env.SSH_PASSWORD,
-    });
-});
+    })
+})
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`)
