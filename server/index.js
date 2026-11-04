@@ -711,9 +711,10 @@ ORDER BY
 
   const fallbackGrafana = async () => {
     try {
-      const grafanaUrl = process.env.GRAFANA_URL || ''
-      const grafanaToken = process.env.GRAFANA_TOKEN || ''
-      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || ''
+      const grafanaUrl = process.env.GRAFANA_URL || 'https://zbx.uaj.my.id/grafana/api/ds/query'
+      const grafanaToken =
+        process.env.GRAFANA_TOKEN || 'glsa_yGT5yCWQIY7IJVNHC7Q5hDel23hFAwrA_de492d1f'
+      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || 'eftontc84z3eoc'
 
       const fromMs = dayjs(`${period}-01`).startOf('month').valueOf()
       const toMs = dayjs(`${period}-01`).endOf('month').valueOf()
@@ -895,9 +896,10 @@ ORDER BY FIELD(r.Lokasi, 'Semanggi', 'BSD', 'Pluit');
 
   const fallbackGrafana = async () => {
     try {
-      const grafanaUrl = process.env.GRAFANA_URL || ''
-      const grafanaToken = process.env.GRAFANA_TOKEN || ''
-      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || ''
+      const grafanaUrl = process.env.GRAFANA_URL || 'https://zbx.uaj.my.id/grafana/api/ds/query'
+      const grafanaToken =
+        process.env.GRAFANA_TOKEN || 'glsa_yGT5yCWQIY7IJVNHC7Q5hDel23hFAwrA_de492d1f'
+      const datasourceUid = process.env.GRAFANA_ZABBIX_MYSQL_UID || 'eftontc84z3eoc'
 
       const fromMs = dayjs(`${period}-01`).startOf('month').valueOf()
       const toMs = dayjs(`${period}-01`).endOf('month').valueOf()
