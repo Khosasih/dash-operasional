@@ -73,7 +73,7 @@ const chartOptions = computed(() => ({
         <span class="check-box">
           <Check class="check-icon" />
         </span>
-        <span class="target-lbl">Target &ge; 99.00%</span>
+        <span class="target-lbl">Target &ge; 99.50%</span>
       </div>
     </div>
   </template>
